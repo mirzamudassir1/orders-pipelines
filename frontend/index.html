@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orders Pipeline Monitor</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header><h1>Orders Pipeline Monitor</h1></header>
+  <main>
+    <section class="card">
+      <h2>Run pipeline</h2>
+      <input type="file" id="file" accept=".csv">
+      <button id="runBtn">Upload &amp; run</button>
+      <pre id="runResult"></pre>
+    </section>
+    <section class="card"><h2>Data-quality checks</h2><div id="quality"></div></section>
+    <section class="card"><h2>Orders by status</h2><div id="summary"></div></section>
+    <section class="card"><h2>Run history</h2><div id="runs"></div></section>
+    <section class="card">
+      <h2>Rejected records</h2>
+      <select id="runFilter"></select>
+      <div id="rejects"></div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
