@@ -1,0 +1,62 @@
+﻿[
+  {
+    "check": "unique_order_id",
+    "passed": true,
+    "violations": 0,
+    "description": "order_id is unique in fact_orders"
+  },
+  {
+    "check": "referential_integrity",
+    "passed": true,
+    "violations": 0,
+    "description": "every order points to an existing customer"
+  },
+  {
+    "check": "no_blank_required",
+    "passed": true,
+    "violations": 0,
+    "description": "no blank required fields"
+  },
+  {
+    "check": "amount_in_range",
+    "passed": true,
+    "violations": 0,
+    "description": "amounts within business limits"
+  },
+  {
+    "check": "valid_status",
+    "passed": true,
+    "violations": 0,
+    "description": "status is one of the allowed values"
+  },
+  {
+    "check": "orders_have_history",
+    "passed": true,
+    "violations": 0,
+    "description": "each order has at least one history event"
+  },
+  {
+    "check": "fact_equals_latest_history",
+    "passed": true,
+    "violations": 0,
+    "description": "fact_orders holds the latest event per order"
+  },
+  {
+    "check": "run_counts_reconcile",
+    "passed": true,
+    "violations": 0,
+    "description": "input = accepted + rejected for every successful run"
+  },
+  {
+    "check": "rejects_traceable",
+    "passed": true,
+    "violations": 0,
+    "description": "every reject links to a run"
+  },
+  {
+    "check": "reject_totals_reconcile",
+    "passed": true,
+    "violations": 0,
+    "description": "run-level reject counts match stored reject rows"
+  }
+]
