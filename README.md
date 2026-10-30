@@ -7,3 +7,8 @@
 - Benchmark (100,000 rows, seed 42, local Windows machine): 11.43 s end-to-end, about 8,751 rows/s (`docs/benchmark_results.txt`)
 - Optimization: all writes are batched with `executemany` inside one transaction. In an isolated micro-benchmark of 20,000 inserts, a commit per row took 62.06 s versus 0.03 s for one batched transaction. The gap is exaggerated by per-commit disk syncs on Windows, so the exact ratio varies by machine.
 - Next optimization: stream the file in chunks of about 10k rows instead of holding all events in memory.
+<br>
+<br>
+<br>
+<br>
+![Dashboard](./docs/dashboard.png)
