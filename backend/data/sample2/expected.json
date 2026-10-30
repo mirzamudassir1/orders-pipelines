@@ -1,0 +1,17 @@
+{
+  "seed": 7,
+  "input_rows": 300,
+  "accepted_rows": 260,
+  "rejected_rows": 40,
+  "distinct_orders": 254,
+  "rejected_by_code": {
+    "AMOUNT_OUT_OF_RANGE": 5,
+    "INVALID_STATUS": 9,
+    "DUPLICATE_EVENT": 6,
+    "INVALID_TIMESTAMP": 4,
+    "INVALID_REFERENCE": 5,
+    "MALFORMED_ROW": 5,
+    "MISSING_REQUIRED_FIELD": 4,
+    "INVALID_AMOUNT": 2
+  }
+}
