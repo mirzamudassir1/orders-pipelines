@@ -1,0 +1,1 @@
+﻿end-to-end: 100,000 rows in 12.04s = 8,308 rows/s | accepted=87993 rejected=12007

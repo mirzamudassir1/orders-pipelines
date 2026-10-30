@@ -20,6 +20,7 @@ def main(argv=None):
     c = sub.add_parser("load-customers"); c.add_argument("path")
     r = sub.add_parser("run"); r.add_argument("path")
     sub.add_parser("quality")
+    rc = sub.add_parser("reconcile"); rc.add_argument("path")
 
     args = p.parse_args(argv)
     logging.basicConfig(level=logging.INFO,
@@ -39,6 +40,10 @@ def main(argv=None):
         if args.cmd == "load-customers":
             print(f"loaded {load.load_customers(conn, args.path)} customers")
             return 0
+                if args.cmd == "reconcile":
+            result = quality.reconcile_source(conn, args.path)
+            print(json.dumps(result, indent=2))
+            return 0 if result["passed"] else 1
         results = quality.run_checks(conn)
         print(json.dumps(results, indent=2))
         return 0 if all(x["passed"] for x in results) else 1

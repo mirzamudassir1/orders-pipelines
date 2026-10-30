@@ -1,3 +1,4 @@
+from . import config, ingest, transform, validate
 from . import config
 
 
@@ -57,3 +58,25 @@ def summary(conn):
         "SELECT reason_code, COUNT(*) AS rejected FROM rejected_records "
         "GROUP BY reason_code ORDER BY rejected DESC")]
     return {"orders_by_status": by_status, "rejects_by_reason": rejects}
+def reconcile_source(conn, path):
+    """Independent source-to-target check: re-read the CSV, keep the latest valid
+    event per order, and compare order count and amount totals with fact_orders.
+    Valid when the database was loaded from this one file."""
+    known = {r[0] for r in conn.execute("SELECT customer_id FROM dim_customer")}
+    latest = {}
+    for _, row in ingest.iter_rows(path):
+        clean, rej = validate.validate_row(row, known)
+        if rej:
+            continue
+        ev = transform.to_event(clean)
+        cur = latest.get(ev["order_id"])
+        if cur is None or ev["updated_at"] > cur["updated_at"]:
+            latest[ev["order_id"]] = ev
+    src = {"orders": len(latest),
+           "amount_cents": sum(e["amount_cents"] for e in latest.values()),
+           "amount_usd_cents": sum(e["amount_usd_cents"] for e in latest.values())}
+    row = conn.execute(
+        "SELECT COUNT(*), COALESCE(SUM(amount_cents),0), COALESCE(SUM(amount_usd_cents),0) "
+        "FROM fact_orders").fetchone()
+    tgt = {"orders": row[0], "amount_cents": row[1], "amount_usd_cents": row[2]}
+    return {"passed": src == tgt, "source": src, "target": tgt}
