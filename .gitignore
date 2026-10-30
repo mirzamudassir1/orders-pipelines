@@ -1,0 +1,6 @@
+__pycache__/
+.venv/
+.pytest_cache/
+backend/data/warehouse.db
+backend/data/uploads/
+backend/data/large/
