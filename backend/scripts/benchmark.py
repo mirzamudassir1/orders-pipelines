@@ -32,12 +32,14 @@ def load_strategy(n=20_000):
         for r in rows:                                   # naive: commit per row
             c.execute("INSERT INTO t VALUES (?,?)", r)
         naive = time.perf_counter() - t
+        c.close()
 
         c2 = sqlite3.connect(Path(d) / "b.db"); c2.isolation_level = None
         c2.execute("CREATE TABLE t (id TEXT PRIMARY KEY, s TEXT)")
         t = time.perf_counter()
         c2.execute("BEGIN"); c2.executemany("INSERT INTO t VALUES (?,?)", rows); c2.execute("COMMIT")
         batched = time.perf_counter() - t
+        c2.close()
     print(f"per-row commit: {naive:.2f}s | batched single txn: {batched:.2f}s | "
           f"speedup x{naive / batched:.0f}")
 
