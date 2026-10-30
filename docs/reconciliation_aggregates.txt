@@ -1,0 +1,13 @@
+﻿{
+  "passed": true,
+  "source": {
+    "orders": 168,
+    "amount_cents": 52442529,
+    "amount_usd_cents": 39650504
+  },
+  "target": {
+    "orders": 168,
+    "amount_cents": 52442529,
+    "amount_usd_cents": 39650504
+  }
+}

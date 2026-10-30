@@ -40,7 +40,7 @@ def main(argv=None):
         if args.cmd == "load-customers":
             print(f"loaded {load.load_customers(conn, args.path)} customers")
             return 0
-                if args.cmd == "reconcile":
+        if args.cmd == "reconcile":
             result = quality.reconcile_source(conn, args.path)
             print(json.dumps(result, indent=2))
             return 0 if result["passed"] else 1
