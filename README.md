@@ -8,18 +8,18 @@ A CSV orders feed is validated, transformed and loaded into a SQLite warehouse. 
 
 ```mermaid
 flowchart LR
-  A[orders.csv] --> B[ingest: header/schema check]
-  B --> C[validate: row rules]
-  C -->|invalid| R[(rejected_records)]
-  C -->|valid| D[dedupe in batch]
+  A["orders.csv"] --> B["ingest: schema check"]
+  B --> C["validate: row rules"]
+  C -->|invalid| R[("rejected_records")]
+  C -->|valid| D["dedupe in batch"]
   D -->|duplicate| R
-  D --> E[transform: cents, USD, UTC]
-  E --> T{{one transaction}}
-  T --> H[(order_status_history)]
-  T --> F[(fact_orders)]
-  T --> P[(pipeline_runs)]
-  F --> Q[quality checks]
-  Q --> UI[FastAPI + dashboard]
+  D --> E["transform: cents, USD, UTC"]
+  E --> T["one transaction"]
+  T --> H[("order_status_history")]
+  T --> F[("fact_orders")]
+  T --> P[("pipeline_runs")]
+  F --> Q["quality checks"]
+  Q --> UI["FastAPI + dashboard"]
 ```
 
 ## Project structure
