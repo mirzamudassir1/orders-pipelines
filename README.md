@@ -119,16 +119,17 @@ snake_case tables and columns, ISO-8601 UTC timestamps, deterministic IDs (ORD-#
 
 ## Testing
 
-44 tests in `backend/tests/`:
+46 tests in `backend/tests/`:
 
 - **Unit:** every validation rule, amount boundaries (0.01 and 100,000.00 inclusive), missing fields, malformed rows, timezone normalisation, FX conversion and half-up rounding.
 - **Integration:** happy path, empty batch, empty file, schema change, extra column, rejects traceable to file and line, duplicates, cross-file duplicates, rerun, overlapping files, late-arriving and out-of-order events, partial failure with rollback and retry, missing file.
 - **Data quality:** a seeded 2,000-row file with labelled bad records must produce exactly the expected counts per reject code, and every SQL quality check must pass. A source-to-target aggregate reconciliation test compares order count and amount totals.
+- Negative tests deliberately corrupt the warehouse and assert that the quality checks and the aggregate reconciliation fail.
 - **Regression:** inclusive upper amount boundary, equal-timestamp events do not flip state, same seed gives identical output.
 
 ## Results
 
-- Tests: 44 passed (`docs/test_results.txt`)
+- Tests: 46 passed (`docs/test_results.txt`)
 - Sample run: input 200, accepted 174, rejected 26, duplicates 2, matching `data/sample/expected.json`
 - Quality checks: 10 of 10 pass (`docs/reconciliation.txt`)
 - Source-to-target aggregates reconcile: 168 orders, 52,442,529 total amount cents, 39,650,504 total USD cents (`docs/reconciliation_aggregates.txt`)
