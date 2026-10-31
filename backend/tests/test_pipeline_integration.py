@@ -113,3 +113,12 @@ def test_partial_failure_rolls_back_then_retry_succeeds(conn, db_path, make_csv,
 def test_missing_file_raises(tmp_path, db_path):
     with pytest.raises(FileNotFoundError):
         pipeline.run_pipeline(tmp_path / "nope.csv", db_path)
+
+
+def test_cross_file_duplicate_is_counted_and_quarantined(conn, db_path, make_csv):
+    pipeline.run_pipeline(make_csv("a.csv", [good_row()]), db_path)
+    s = pipeline.run_pipeline(make_csv("b.csv", [good_row(), good_row(order_id="ORD-000002")]), db_path)
+    assert (s["accepted_rows"], s["duplicate_rows"], s["rejected_rows"]) == (1, 1, 1)
+    assert count(conn, "fact_orders") == 2 and count(conn, "order_status_history") == 2
+    detail = conn.execute("SELECT reason_detail FROM rejected_records WHERE source_file='b.csv'").fetchone()[0]
+    assert "earlier file" in detail

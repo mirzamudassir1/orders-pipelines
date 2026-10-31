@@ -62,6 +62,13 @@ def run_pipeline(source_file, db_path=None, now=None):
                     rejects.append((line_no, "DUPLICATE_EVENT",
                                     "same order_id + updated_at already in batch", row))
                     continue
+                if conn.execute(
+                        "SELECT 1 FROM order_status_history WHERE order_id = ? AND updated_at = ?",
+                        key).fetchone():
+                    duplicates += 1
+                    rejects.append((line_no, "DUPLICATE_EVENT",
+                                    "same order_id + updated_at already loaded from an earlier file", row))
+                    continue
                 seen.add(key)
                 events.append(event)
 

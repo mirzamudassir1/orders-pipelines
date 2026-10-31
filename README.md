@@ -11,7 +11,7 @@ flowchart LR
   A["orders.csv"] --> B["ingest: schema check"]
   B --> C["validate: row rules"]
   C -->|invalid| R[("rejected_records")]
-  C -->|valid| D["dedupe in batch"]
+  C -->|valid| D["dedupe: in batch and vs history"]
   D -->|duplicate| R
   D --> E["transform: cents, USD, UTC"]
   E --> T["one transaction"]
@@ -106,42 +106,41 @@ snake_case tables and columns, ISO-8601 UTC timestamps, deterministic IDs (ORD-#
 - FX rates are fixed (EUR 1.08, INR 0.012) and live in `config.py`.
 - Timestamps without a timezone are treated as UTC, and all timestamps are stored in UTC.
 - Amounts must be between 0.01 and 100,000.00 inclusive, with at most two decimals.
-- An event is identified by (order_id, updated_at). Within one file the first occurrence wins and later copies are quarantined as DUPLICATE_EVENT.
+- An event is identified by (order_id, updated_at). The first occurrence wins. Later copies, whether in the same file or in a file loaded earlier, are quarantined as DUPLICATE_EVENT.
 - Extra columns in the file are ignored with a warning. Missing required columns fail the run.
 - The customer reference file is trusted and loaded before orders.
 
 ## Idempotency, retry and backfill
 
 - A file whose content hash already has a SUCCESS run is SKIPPED, so reruns add nothing.
-- Overlapping files are safe. History uses INSERT OR IGNORE on (order_id, updated_at), and the fact upsert applies only when updated_at is newer, so late or out-of-order data never overwrites newer state.
+- Overlapping files are safe. An event already in history is quarantined as DUPLICATE_EVENT and counted, and the fact upsert applies only when updated_at is newer, so late or out-of-order data never overwrites newer state.
 - Each file loads in one transaction. A failure rolls everything back and marks the run FAILED. Retrying means running the same file again, because only SUCCESS blocks a rerun.
 - Backfill: load older files in any order and the result converges to the latest event per order.
 
 ## Testing
 
-43 tests in `backend/tests/`:
+44 tests in `backend/tests/`:
 
 - **Unit:** every validation rule, amount boundaries (0.01 and 100,000.00 inclusive), missing fields, malformed rows, timezone normalisation, FX conversion and half-up rounding.
-- **Integration:** happy path, empty batch, empty file, schema change, extra column, rejects traceable to file and line, duplicates, rerun, overlapping files, late-arriving and out-of-order events, partial failure with rollback and retry, missing file.
+- **Integration:** happy path, empty batch, empty file, schema change, extra column, rejects traceable to file and line, duplicates, cross-file duplicates, rerun, overlapping files, late-arriving and out-of-order events, partial failure with rollback and retry, missing file.
 - **Data quality:** a seeded 2,000-row file with labelled bad records must produce exactly the expected counts per reject code, and every SQL quality check must pass. A source-to-target aggregate reconciliation test compares order count and amount totals.
 - **Regression:** inclusive upper amount boundary, equal-timestamp events do not flip state, same seed gives identical output.
 
 ## Results
 
-- Tests: 43 passed (`docs/test_results.txt`)
+- Tests: 44 passed (`docs/test_results.txt`)
 - Sample run: input 200, accepted 174, rejected 26, duplicates 2, matching `data/sample/expected.json`
 - Quality checks: 10 of 10 pass (`docs/reconciliation.txt`)
 - Source-to-target aggregates reconcile: 168 orders, 52,442,529 total amount cents, 39,650,504 total USD cents (`docs/reconciliation_aggregates.txt`)
 - Sample queries and output: `docs/sample_queries.sql`, `docs/sample_queries_output.txt`
-- Benchmark (100,000 rows, seed 42, local Windows machine): 11.43 s end-to-end, about 8,751 rows/s (`docs/benchmark_results.txt`)
-- Optimization: all writes are batched with `executemany` inside one transaction. In an isolated micro-benchmark of 20,000 inserts, a commit per row took 62.06 s versus 0.03 s for one batched transaction. The gap is exaggerated by per-commit disk syncs on Windows, so the exact ratio varies by machine.
+- Benchmark (100,000 rows, seed 42, local Windows machine): 18.47 s end-to-end, about 5,414 rows/s (`docs/benchmark_results.txt`). Includes one indexed history lookup per accepted row for cross-file duplicate detection. Timings vary between runs on the same machine.
+- Optimization: all writes are batched with `executemany` inside one transaction. In an isolated micro-benchmark of 20,000 inserts, a commit per row took 76.60 s versus 0.10 s for one batched transaction. The gap is exaggerated by per-commit disk syncs on Windows, so the exact ratio varies by machine.
 - Next optimization: stream the file in chunks of about 10k rows instead of holding all events in memory.
 
 ## Known limitations and next steps
 
 - SQLite allows a single writer and has no distributed scale. A warehouse such as Postgres or BigQuery would replace it.
 - The whole file is held in memory per run. The next step is chunked streaming.
-- The same (order_id, updated_at) arriving in a second file is ignored silently and not counted as a duplicate.
 - Aggregate reconciliation assumes the database was loaded from the single file being checked.
 - FX rates are static, the customer file must be clean (it fails fast), and the API has no authentication.
 
