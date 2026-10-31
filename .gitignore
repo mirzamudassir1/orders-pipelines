@@ -4,3 +4,4 @@ __pycache__/
 backend/data/warehouse.db
 backend/data/uploads/
 backend/data/large/
+backend/data/*.db
